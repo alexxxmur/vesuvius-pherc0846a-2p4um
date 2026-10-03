@@ -1,0 +1,33 @@
+{
+  "scroll": "PHerc0846A",
+  "scan": "PHerc0846A/volumes/20260319102732-2.403um-0.2m-77keV-masked.zarr (2.403 um, 77 keV, 15137 slices = ~36 mm band)",
+  "surface_prediction": "surface-m7-L2-th0.2 (team, level 2 = 9.612 um) + normal grids",
+  "ink_model": "scrollprize/ink_canonical_2um r152_3ddec_v2_l5_epoch13.ckpt",
+  "patches": {
+    "s12": {"seed_l2_xyz": [4512, 4808, 2648], "band_height": "upper", "grow_s": 1328, "ct_covered_cm2": 14.28,
+            "render": {"slices": 129, "canvas_px": [16160, 16160], "download_gb": 71, "note": "two attempts"},
+            "frac_p_ge_0_5": {"default_order": [0.025, 0.026, 0.024], "reverse_order": [0.036, 0.036, 0.040]}},
+    "s6":  {"seed_l2_xyz": [4544, 4736, 1896], "band_height": "middle", "grow_s": 4765, "ct_covered_cm2": 9.33,
+            "render": {"slices": 129, "canvas_px": [12960, 12960], "download_gb": 27},
+            "frac_p_ge_0_5": {"default_order": [0.069, 0.063, 0.064], "reverse_order": [0.090, 0.096, 0.080]}},
+    "s0":  {"seed_l2_xyz": [4632, 4768, 1136], "band_height": "lower", "grow_s": 2192, "ct_covered_cm2": 10.04,
+            "render": {"slices": 129, "canvas_px": [13440, 13440], "download_gb": 93},
+            "frac_p_ge_0_5": {"default_order": [0.082, 0.082, 0.091], "reverse_order": [0.093, 0.095, 0.078]}}
+  },
+  "windows_note": "62-slice windows starting at 1, 33, 66 of 129 (+-64 voxels = +-155 um around the mesh)",
+  "overlap": {"s0_nodes_near_s6": 0.175, "s6_nodes_near_s0": 0.178, "s12_with_others": "<0.02"},
+  "unique_ct_covered_cm2_approx": 32,
+  "candidates": 0,
+  "positive_control_w043": {
+    "team_render_canonical_auc": {"right_order": 0.890, "wrong_order": 0.430},
+    "our_render_vs_team_render_ct_r": {"mesh_nodes": 0.971, "all_slices_after_order_reversal": [0.993, 0.997]},
+    "our_render_canonical_auc": {"right_order": 0.872, "wrong_order": 0.440},
+    "labelled_px": 133672,
+    "caveat": "w043 surface was likely in the canonical model's training data: technical control, not transfer"
+  },
+  "lightweight_render_vs_vc_render_tifxyz_edge": {
+    "patch": "s6 test patch, 0.5 cm2, 65 slices",
+    "vc_render_tifxyz": "crashed (corrupted size vs. prev_size) / hung after ~31 GB",
+    "render_tifxyz_light": "4.7 GB, 11 min serial; 41 s from cache with 6 workers"
+  }
+}
