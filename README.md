@@ -38,7 +38,7 @@ All statements as of 4 Oct 2026.
 | --- | ---: | --- | --- |
 | s12 (upper) | 14.3 cm² | 2.8 / 3.0 / 2.6 % | 3.3 / 3.3 / 4.0 % |
 | s6 (middle) | 9.3 cm² | 6.9 / 5.8 / 5.8 % | 9.3 / 9.8 / 8.2 % |
-| s0 (lower) | 10.0 cm² | 8.0 / 8.2 / 9.3 % | 9.3 / 9.8 / 7.9 % |
+| s0 (lower) | 10.1 cm² | 8.0 / 8.2 / 9.3 % | 9.3 / 9.8 / 7.9 % |
 
 Fractions are over pixels whose rendered CT is non-zero. s0 and s6 overlap: ≈18 % of their mesh nodes lie
 within 10 level-2 voxels (≈96 µm) of the other patch (`patch_overlap.py`; this proximity test could also
@@ -80,7 +80,7 @@ on labelled strokes is also not the same as a papyrologist reading the text.
 
 A mesh that follows a sheet shows a CT-intensity peak along the normal (dense papyrus between gaps or
 neighbouring windings). We sample 40 random 0.3 mm columns of a surface volume and report **S_local**, the
-median over columns of (max − median)/median of each column's depth profile. Results for the ~2.4 µm surface
+median over columns of (max − median)/median of each column's depth profile after ~10 µm smoothing. Results for the ~2.4 µm surface
 volumes in the open-data bucket (2.215–2.403 µm, cropped to the central ±131 µm; our patches with
 `--half-depth-um 131`):
 
@@ -125,8 +125,9 @@ from cache with 6 worker processes, bit-identical output). It
   uses the same mapping);
 - takes normals from the grid and orients the whole patch with **one** sign (cosine-weighted vote over valid
   nodes, away from the image centre);
-- fetches only the raw 128³ chunks the ±N-slice shell touches (disk cache), renders 256-px tiles in parallel
-  processes, and writes a surface-volume zarr in the published layout.
+- for each 256-px output tile fetches only the raw 128³ chunks inside the bounding box of that tile's
+  ±N-slice shell (disk cache), renders tiles in parallel processes, and writes a surface-volume zarr in the
+  published layout.
 
 Its slice order is the reverse of `vc_render_tifxyz` on w043, so run inference in both orders. It runs on
 Linux / WSL only (it uses the `fork` start method) and needs zarr ≥ 3. Level-2 segment coordinates are scaled
