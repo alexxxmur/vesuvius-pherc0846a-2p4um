@@ -1,33 +1,132 @@
 {
-  "scroll": "PHerc0846A",
-  "scan": "PHerc0846A/volumes/20260319102732-2.403um-0.2m-77keV-masked.zarr (2.403 um, 77 keV, 15137 slices = ~36 mm band)",
-  "surface_prediction": "surface-m7-L2-th0.2 (team, level 2 = 9.612 um) + normal grids",
-  "ink_model": "scrollprize/ink_canonical_2um r152_3ddec_v2_l5_epoch13.ckpt",
-  "patches": {
-    "s12": {"seed_l2_xyz": [4512, 4808, 2648], "band_height": "upper", "grow_s": 1328, "ct_covered_cm2": 14.28,
-            "render": {"slices": 129, "canvas_px": [16160, 16160], "download_gb": 71, "note": "two attempts"},
-            "frac_p_ge_0_5": {"default_order": [0.025, 0.026, 0.024], "reverse_order": [0.036, 0.036, 0.040]}},
-    "s6":  {"seed_l2_xyz": [4544, 4736, 1896], "band_height": "middle", "grow_s": 4765, "ct_covered_cm2": 9.33,
-            "render": {"slices": 129, "canvas_px": [12960, 12960], "download_gb": 27},
-            "frac_p_ge_0_5": {"default_order": [0.069, 0.063, 0.064], "reverse_order": [0.090, 0.096, 0.080]}},
-    "s0":  {"seed_l2_xyz": [4632, 4768, 1136], "band_height": "lower", "grow_s": 2192, "ct_covered_cm2": 10.04,
-            "render": {"slices": 129, "canvas_px": [13440, 13440], "download_gb": 93},
-            "frac_p_ge_0_5": {"default_order": [0.082, 0.082, 0.091], "reverse_order": [0.093, 0.095, 0.078]}}
+ "as_of": "2026-10-04",
+ "scroll": "PHerc0846A",
+ "scan": "PHerc0846A/volumes/20260319102732-2.403um-0.2m-77keV-masked.zarr (2.403 um, 77 keV, 15137 slices, ~36 mm band)",
+ "surface_prediction": "surface-m7-L2-th0.2 (team, level 2 = 9.612 um) + normal grids",
+ "ink_model": "scrollprize/ink_canonical_2um r152_3ddec_v2_l5_epoch13.ckpt, stride 128, 62-slice windows starting 1/33/66 of 129",
+ "renderer": "render_tifxyz_light.py with patch-global normal sign (fixed version)",
+ "patches": {
+  "s12": {
+   "ct_covered_cm2": 14.29,
+   "frac_p_ge_0_5_over_ct_pixels": {
+    "w1-default": 0.028,
+    "w1-reverse": 0.0331,
+    "w33-default": 0.0298,
+    "w33-reverse": 0.0333,
+    "w66-default": 0.0256,
+    "w66-reverse": 0.0397
+   }
   },
-  "windows_note": "62-slice windows starting at 1, 33, 66 of 129 (+-64 voxels = +-155 um around the mesh)",
-  "overlap": {"s0_nodes_near_s6": 0.175, "s6_nodes_near_s0": 0.178, "s12_with_others": "<0.02"},
-  "unique_ct_covered_cm2_approx": 32,
-  "candidates": 0,
-  "positive_control_w043": {
-    "team_render_canonical_auc": {"right_order": 0.890, "wrong_order": 0.430},
-    "our_render_vs_team_render_ct_r": {"mesh_nodes": 0.971, "all_slices_after_order_reversal": [0.993, 0.997]},
-    "our_render_canonical_auc": {"right_order": 0.872, "wrong_order": 0.440},
-    "labelled_px": 133672,
-    "caveat": "w043 surface was likely in the canonical model's training data: technical control, not transfer"
+  "s6": {
+   "ct_covered_cm2": 9.34,
+   "frac_p_ge_0_5_over_ct_pixels": {
+    "w1-default": 0.0692,
+    "w1-reverse": 0.0931,
+    "w33-default": 0.0583,
+    "w33-reverse": 0.0981,
+    "w66-default": 0.0578,
+    "w66-reverse": 0.0823
+   }
   },
-  "lightweight_render_vs_vc_render_tifxyz_edge": {
-    "patch": "s6 test patch, 0.5 cm2, 65 slices",
-    "vc_render_tifxyz": "crashed (corrupted size vs. prev_size) / hung after ~31 GB",
-    "render_tifxyz_light": "4.7 GB, 11 min serial; 41 s from cache with 6 workers"
+  "s0": {
+   "ct_covered_cm2": 10.05,
+   "frac_p_ge_0_5_over_ct_pixels": {
+    "w1-default": 0.0804,
+    "w1-reverse": 0.0931,
+    "w33-default": 0.0816,
+    "w33-reverse": 0.0975,
+    "w66-default": 0.0929,
+    "w66-reverse": 0.0792
+   }
   }
+ },
+ "seeds_l2_xyz": {
+  "s12": [
+   4512,
+   4808,
+   2648
+  ],
+  "s6": [
+   4544,
+   4736,
+   1896
+  ],
+  "s0": [
+   4632,
+   4768,
+   1136
+  ]
+ },
+ "grow_minutes": {
+  "s12": 22,
+  "s0": 37,
+  "s6": 79,
+  "note": "three grows overlapped"
+ },
+ "download_gb": {
+  "s12": 71,
+  "s6": 27,
+  "s0": 93,
+  "note": "s12 includes a failed first attempt; s6 reused chunks cached for s0"
+ },
+ "overlap": {
+  "s0_nodes_near_s6": 0.175,
+  "s6_nodes_near_s0": 0.178,
+  "s12_with_others": "<0.02"
+ },
+ "unique_ct_covered_cm2_approx": 32,
+ "candidates": 0,
+ "positive_control_w043": {
+  "window_l0": [
+   16384,
+   18432,
+   8448,
+   12544
+  ],
+  "supervised_px_9p6um_grid": 133672,
+  "ink_px": 61960,
+  "team_render_auc": {
+   "right_order": 0.888,
+   "wrong_order": 0.446
+  },
+  "our_render_auc": {
+   "right_order": 0.872,
+   "wrong_order": 0.439
+  },
+  "ct_at_mesh_nodes_r": 0.927,
+  "slice_match": "ours k -> team 86-k, r 0.993-0.994",
+  "caveat": "canonical model training data not documented; PHerc0139 may be in it"
+ },
+ "sheet_profile_qc_2p4um_central_131um": {
+  "team_labelled": {
+   "n": 27,
+   "S_local_median": 0.4,
+   "S_local_min": 0.19,
+   "offset_sd_median_um": 69,
+   "offset_sd_p90_um": 80
+  },
+  "team_auto_grown": {
+   "n": 31,
+   "S_local_median": 0.22,
+   "S_local_min": 0.12,
+   "offset_sd_median_um": 77,
+   "offset_sd_p90_um": 85
+  },
+  "ours": {
+   "s12": {
+    "S_local": 0.109,
+    "offset_sd_um": 89
+   },
+   "s6": {
+    "S_local": 0.196,
+    "offset_sd_um": 88
+   },
+   "s0": {
+    "S_local": 0.194,
+    "offset_sd_um": 88
+   }
+  }
+ },
+ "tilt_experiment_w043": "results/qc/tilt_experiment_w043.json",
+ "bug_fixed_before_release": "per-node normal sign flipped depth order on 50/18/10 % of s12/s6/s0 nodes; all renders and maps redone"
 }

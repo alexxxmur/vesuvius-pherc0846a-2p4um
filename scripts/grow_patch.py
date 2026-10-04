@@ -4,8 +4,10 @@ Works on any scan whose surface prediction and normal grids are published in the
 including predictions made at a pyramid level other than 0 (e.g. the m7 "L2" predictions of the
 2.4 µm scans): seeds and growth then live in that level's voxel coordinates.
 
-Grid prefetching and GrowPatch parameters follow Bullo27/first-letters-survey (fls.py, MIT,
-https://github.com/Bullo27/first-letters-survey).
+Grid prefetching, seed placement and GrowPatch parameters are adapted from Bullo27/first-letters-survey
+(fls.py, https://github.com/Bullo27/first-letters-survey), used under its MIT licence:
+    Copyright (c) 2026 Matteo Bulloni. Permission is hereby granted, free of charge, to any person obtaining
+    a copy of this software ... (full MIT text in LICENSE-THIRD-PARTY).
 
 Example (PHerc0846A, 2.403 µm scan, L2 prediction):
 
@@ -13,8 +15,8 @@ Example (PHerc0846A, 2.403 µm scan, L2 prediction):
     python grow_patch.py grow --work ~/fl-work --seed-index 12 --gens 100
 
 IMPORTANT: keep --work on a native Linux filesystem (e.g. inside WSL ext4). On a Windows drive mounted
-through Docker Desktop the tracer is I/O bound on grid reads (we measured ~50 generations in 3 h
-versus 100 generations in ~25 min).
+through Docker Desktop the tracer is I/O bound on grid reads (we measured 50 generations in 3 h there,
+versus 15 generations in 22 s and 100 generations in 22 min on ext4).
 """
 import argparse
 import concurrent.futures as cf

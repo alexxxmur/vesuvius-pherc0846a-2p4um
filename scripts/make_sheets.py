@@ -14,13 +14,16 @@ def main():
     out, name = Path(sys.argv[1]), sys.argv[2]
     rows, stats = [], {}
     sv = zarr.open(str(out/f'{name}-d129.zarr'/'0'), mode='r')
-    ct = np.asarray(sv[sv.shape[0]//2, ::8, ::8]) > 0
+    # Denominator for every fraction: pixels whose rendered CT is non-zero (inside the mesh and the scan).
+    ct = np.asarray(sv[sv.shape[0]//2]) > 0
     stats['ct_covered_cm2'] = float(ct.mean()*sv.shape[1]*sv.shape[2]*(2.403e-4)**2)
     for start in (1, 33, 66):
         cells = []
         for suffix in ('', '-reverse'):
             a = tifffile.imread(out/f'{name}-w{start}{suffix}.tif')
-            v = a[a > 0]/255
+            if a.shape != ct.shape:
+                raise SystemExit(f'map {a.shape} and render {ct.shape} differ')
+            v = a[ct]/255
             stats[f'w{start}{suffix or "-default"}'] = {'frac_p_ge_0_5': float((v >= .5).mean()),
                                                         'p99': float(np.percentile(v, 99))}
             k = max(1, a.shape[0]//1000)

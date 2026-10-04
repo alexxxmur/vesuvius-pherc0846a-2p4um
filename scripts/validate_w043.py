@@ -54,24 +54,57 @@ def main():
         subprocess.run([sys.executable, str(HERE/'render_tifxyz_light.py'), str(work/'mesh'), VOLUME, str(ours),
                         '--seg-level-factor', '1', '--depth', '65', '--crop', str(Y0), str(Y1), str(X0), str(X1)],
                        check=True)
+    team_zarr = work/'w043-team.zarr'
     team = ChunkStore(TEAM_SV, work/'team-sv-cache')
     block, _, _ = team.block(np.array([0, Y0, X0]), np.array([team.shape[0], Y1, X1]))
+    if not (team_zarr/'0').exists():
+        root = zarr.open_group(str(team_zarr), mode='w', zarr_format=2)
+        root.create_array('0', shape=block.shape, chunks=(block.shape[0], 128, 128), dtype='u1',
+                          compressors=None, fill_value=0)[:] = block
+    mid = block.shape[0]//2
+
+    # 1. Mesh -> volume mapping: CT sampled at mesh nodes inside the window vs the team's middle slice.
+    import tifffile as tf
+    mx, my, mz = (tf.imread(work/'mesh'/f'{a}.tif') for a in 'xyz')
+    vol = ChunkStore(VOLUME, work/'volume-cache')
+    rng = np.random.default_rng(0)
+    nodes = [(i, j) for i, j in zip(rng.integers(Y0//20, Y1//20, 400), rng.integers(X0//20, X1//20, 400))
+             if mx[i, j] > 0]
+    at_nodes, team_mid = [], []
+    for i, j in nodes:
+        p = np.floor([mz[i, j], my[i, j], mx[i, j]]).astype(int)
+        at_nodes.append(float(vol.block(p, p+1)[0][0, 0, 0]))
+        team_mid.append(float(block[mid, 20*i-Y0, 20*j-X0]))
+    print(f'CT at {len(nodes)} mesh nodes vs team middle slice: r = {np.corrcoef(at_nodes, team_mid)[0, 1]:.3f}')
+
+    # 2. Every slice of our render vs its best-matching team slice.
     o = zarr.open(str(ours/'0'), mode='r')
-    for k in (2, 32, 62):
-        best = max(range(block.shape[0]), key=lambda j: float((z(o[k][::2, ::2])*z(block[j][::2, ::2])).mean()))
-        r = float((z(o[k][::2, ::2])*z(block[best][::2, ::2])).mean())
-        print(f'our slice {k} best matches team slice {best}, r = {r:.3f}')
+    team_z = [z(block[j][::2, ::2]) for j in range(block.shape[0])]
+    pairs = []
+    for k in range(o.shape[0]):
+        ok = z(np.asarray(o[k])[::2, ::2])
+        rs = [float((ok*t).mean()) for t in team_z]
+        pairs.append((k, int(np.argmax(rs)), max(rs)))
+    print(f'our slice k -> team slice: {[(k, j) for k, j, _ in pairs[::16]]} ...; '
+          f'r min/median = {min(r for *_, r in pairs):.3f}/{np.median([r for *_, r in pairs]):.3f}')
+
+    # 3. Canonical model (stride 128, same as the PHerc0846A runs) on the team render and on ours, both orders.
     ink = np.asarray(zarr.open(f'{args.labels}/pherc0139-w043_inklabels.zarr/0', mode='r')[10]) > 0
     sup = np.asarray(zarr.open(f'{args.labels}/pherc0139-w043_supervision_mask.zarr/0', mode='r')[10]) > 0
-    for flag in ('', '--reverse'):
-        out = work/f'w043-ours{flag.replace("--", "-")}.tif'
-        subprocess.run([sys.executable, str(HERE/'canonical2um_infer.py'), str(ours), args.checkpoint, str(out),
-                        '--start', '1', '--end', '63']+([flag] if flag else []), check=True)
-        p = tifffile.imread(out).astype(np.float32)/255
-        p4 = p.reshape(p.shape[0]//4, 4, p.shape[1]//4, 4).mean((1, 3))
-        i = ink[Y0//4:Y0//4+p4.shape[0], X0//4:X0//4+p4.shape[1]]
-        s = sup[Y0//4:Y0//4+p4.shape[0], X0//4:X0//4+p4.shape[1]]
-        print(f'canonical model {flag or "(default order)"}: AUC {roc_auc_score(i[s], p4[s]):.3f} on {int(s.sum())} px')
+    runs = [('team', team_zarr, mid-31, mid+31), ('ours', ours, 1, 63)]
+    for name, volume, start, end in runs:
+        for flag in ('', '--reverse'):
+            out = work/f'w043-{name}{flag.replace("--", "-")}.tif'
+            if not out.exists():
+                subprocess.run([sys.executable, str(HERE/'canonical2um_infer.py'), str(volume), args.checkpoint, str(out),
+                                '--start', str(start), '--end', str(end), '--stride', '128']+([flag] if flag else []),
+                               check=True)
+            p = tifffile.imread(out).astype(np.float32)/255
+            p4 = p.reshape(p.shape[0]//4, 4, p.shape[1]//4, 4).mean((1, 3))
+            i = ink[Y0//4:Y0//4+p4.shape[0], X0//4:X0//4+p4.shape[1]]
+            s = sup[Y0//4:Y0//4+p4.shape[0], X0//4:X0//4+p4.shape[1]]
+            print(f'{name} render, canonical model {flag or "(default order)"}: AUC {roc_auc_score(i[s], p4[s]):.3f} '
+                  f'over {int(s.sum())} supervised px on the 9.6 µm label grid ({int(i[s].sum())} ink)')
 
 
 if __name__ == '__main__':

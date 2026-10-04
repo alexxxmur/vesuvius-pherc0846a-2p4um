@@ -125,11 +125,13 @@ def normals(points, center_yx):
     for c in range(3):
         n[..., c] = gaussian_filter(n[..., c], 1.0)
     n /= np.linalg.norm(n, axis=-1, keepdims=True)+1e-9
-    # Orient away from the scroll axis so the same sign means "outward" everywhere.
+    # The grid's own normals are consistently oriented across the patch. Choose ONE sign for the whole
+    # patch (majority vote: away from the image centre) instead of per node: a per-node sign flipped the
+    # depth order on up to half of a patch wherever the sheet runs roughly radially.
     radial = points[..., 1:]-np.asarray(center_yx)
-    sign = np.sign(np.sum(n[..., 1:]*radial, axis=-1, keepdims=True))
-    sign[sign == 0] = 1
-    return n*sign
+    radial /= np.linalg.norm(radial, axis=-1, keepdims=True)+1e-9
+    vote = np.sum(n[..., 1:]*radial, axis=-1)
+    return n*(1.0 if vote.sum() >= 0 else -1.0)
 
 
 _JOB = None

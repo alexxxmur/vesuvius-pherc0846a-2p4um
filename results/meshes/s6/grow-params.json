@@ -1,0 +1,11 @@
+{
+ "mode": "seed",
+ "step_size": 20,
+ "generations": 100,
+ "min_area_cm": 0,
+ "thread_limit": 12,
+ "normal_grid_path": "/work/normal_grids",
+ "voxelsize": 9.612,
+ "cache_size": 4000000000,
+ "cache_root": "/work/tracer_cache"
+}

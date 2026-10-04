@@ -1,0 +1,16 @@
+# Rendering, seeds, sheets (Linux / WSL: the renderer uses the "fork" multiprocessing context)
+numpy>=2
+scipy
+zarr>=3,<4
+tifffile
+imagecodecs
+pillow
+fsspec
+s3fs
+scikit-learn
+# Canonical 2 µm model: torch with CUDA plus villa/ink-detection/optimized_inference requirements
+# (tested with torch 2.14.0+cu130, villa f637f3b35208bafa7812b4d97fea45bf43d19edb)
+torch
+albumentations
+tqdm
+numcodecs
