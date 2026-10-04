@@ -118,7 +118,7 @@ def fill_invalid(points, valid):
     return points[idx[0], idx[1]]
 
 
-def normals(points, center_yx):
+def normals(points, center_yx, valid=None):
     du = np.gradient(points, axis=1)
     dv = np.gradient(points, axis=0)
     n = np.cross(dv, du)
@@ -126,11 +126,13 @@ def normals(points, center_yx):
         n[..., c] = gaussian_filter(n[..., c], 1.0)
     n /= np.linalg.norm(n, axis=-1, keepdims=True)+1e-9
     # The grid's own normals are consistently oriented across the patch. Choose ONE sign for the whole
-    # patch (majority vote: away from the image centre) instead of per node: a per-node sign flipped the
-    # depth order on up to half of a patch wherever the sheet runs roughly radially.
+    # patch (cosine-weighted vote over valid nodes: away from the image centre) instead of per node: a
+    # per-node sign flipped the depth order on up to half of a patch wherever the sheet runs roughly radially.
     radial = points[..., 1:]-np.asarray(center_yx)
     radial /= np.linalg.norm(radial, axis=-1, keepdims=True)+1e-9
     vote = np.sum(n[..., 1:]*radial, axis=-1)
+    if valid is not None:
+        vote = vote[valid]
     return n*(1.0 if vote.sum() >= 0 else -1.0)
 
 
@@ -184,7 +186,7 @@ def main():
     points, valid, scale = load_grid(args.segment)
     points = fill_invalid(points, valid)*args.seg_level_factor          # level-0 voxels
     center_yx = (store.shape[1]/2, store.shape[2]/2)
-    n = normals(points, center_yx)
+    n = normals(points, center_yx, valid)
     up = 1/scale*args.seg_level_factor                                    # output px per grid step
     h, w = int(round(points.shape[0]*up)), int(round(points.shape[1]*up))
     half = args.depth//2
@@ -193,7 +195,10 @@ def main():
     y0, y1, x0, x1 = args.crop if args.crop else (0, h, 0, w)
     root.create_array('0', shape=(args.depth, y1-y0, x1-x0), chunks=(args.depth, 128, 128), dtype='u1',
                       compressors=None, fill_value=0)
-    mask_up = zoom(valid.astype(np.float32), (h/valid.shape[0], w/valid.shape[1]), order=1) > .5
+    # Valid mask on the same pixel->grid mapping as the coordinates (pixel p -> grid p*scale, nearest node).
+    iy = np.clip(np.rint(np.arange(h)*valid.shape[0]/h).astype(int), 0, valid.shape[0]-1)
+    ix = np.clip(np.rint(np.arange(w)*valid.shape[1]/w).astype(int), 0, valid.shape[1]-1)
+    mask_up = valid[np.ix_(iy, ix)]
     mask_up[:y0] = False
     mask_up[y1:] = False
     mask_up[:, :x0] = False

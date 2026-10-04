@@ -17,6 +17,7 @@ Works on local zarr surface volumes and on raw (uncompressed) surface volumes in
 
     python qc_sheet_profile.py PATH_OR_BUCKET_KEY [...] --voxel-um 2.403 --out qc.jsonl
     python qc_sheet_profile.py --from-metadata labelled --resolution 2.4 --out qc.jsonl
+    python qc_sheet_profile.py out/s12-d129.zarr --voxel-um 2.403 --half-depth-um 131 --out qc.jsonl
 """
 import argparse
 import json
@@ -44,9 +45,16 @@ def open_volume(source, cache):
     return store.shape, lambda y, x: store.block(np.array([0, y, x]), np.array([store.shape[0], y+128, x+128]))[0]
 
 
-def profile(source, voxel_um, n=40, seed=0, cache='~/.cache/vc-chunks'):
-    shape, read = open_volume(source, str(Path(cache).expanduser()))
+def profile(source, voxel_um, n=40, seed=0, cache='~/.cache/vc-chunks', half_depth_um=None):
+    shape, read_full = open_volume(source, str(Path(cache).expanduser()))
     depth, height, width = shape
+    if half_depth_um:                      # compare surfaces over the same physical depth window
+        keep = min(depth, 2*int(round(half_depth_um/voxel_um))+1)
+        lo = (depth-keep)//2
+        read = lambda y, x, f=read_full: f(y, x)[lo:lo+keep]
+        depth = keep
+    else:
+        read = read_full
     rng = np.random.default_rng(seed)
     win = max(1, int(round(10/voxel_um)))
     acc, cnt, tries, local_s, local_off = np.zeros(depth), 0, 0, [], []
@@ -118,6 +126,7 @@ def main():
     parser.add_argument('--resolution', type=float, default=2.4)
     parser.add_argument('--tolerance', type=float, default=0.25)
     parser.add_argument('--columns', type=int, default=40)
+    parser.add_argument('--half-depth-um', type=float, help='crop every volume to the central ±this many µm')
     parser.add_argument('--cache', default='~/.cache/vc-chunks')
     parser.add_argument('--out', required=True)
     args = parser.parse_args()
@@ -132,7 +141,7 @@ def main():
             if source in done:
                 continue
             try:
-                r = profile(source, voxel, n=args.columns, cache=args.cache)
+                r = profile(source, voxel, n=args.columns, cache=args.cache, half_depth_um=args.half_depth_um)
             except Exception as error:
                 print(f'skip {source}: {error}', flush=True)
                 continue

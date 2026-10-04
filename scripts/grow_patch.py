@@ -42,7 +42,8 @@ DEFAULTS = {
     'pred_level': 2,
     'scan_voxel_um': 2.403,
 }
-IMAGE = 'ghcr.io/scrollprize/villa/volume-cartographer:edge'
+# The 'edge' tag moves; this is the digest used for every result in this repository.
+IMAGE = 'ghcr.io/scrollprize/villa/volume-cartographer@sha256:bad516f66001abca759454cc43e4fd11e5b19aa55d36bdc2043817291c8083c4'
 _tls = threading.local()
 
 

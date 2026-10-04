@@ -14,3 +14,5 @@ torch
 albumentations
 tqdm
 numcodecs
+# labels download (hf CLI)
+huggingface_hub

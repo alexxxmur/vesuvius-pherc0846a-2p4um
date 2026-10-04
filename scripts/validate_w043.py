@@ -6,8 +6,9 @@
 3. runs the canonical 2 µm model in both layer orders and scores it against the ink_9um labels
    (`pherc0139-w043`, annotated on the 2.4 µm render pooled 4×, so the window maps exactly).
 
-Our result: CT r = 0.971 at mesh nodes, r = 0.993–0.997 for every slice after reversing the order,
-model AUC 0.872 (official layer order) vs 0.440 (wrong order).
+Our result (stride 128): CT at 400 mesh nodes vs the team's middle slice r = 0.93; every slice k of ours
+matches team slice 86 − k with r = 0.993–0.994; canonical model AUC on the team render 0.872 (right order) /
+0.447, on ours 0.872 (--reverse) / 0.439.
 Labels: `hf buckets sync hf://buckets/scrollprize/datasets/ink_9um/labels/aligned-scrollprizeorg-21slices/pherc0139-w043 <dir>`.
 """
 import argparse
@@ -91,7 +92,9 @@ def main():
     # 3. Canonical model (stride 128, same as the PHerc0846A runs) on the team render and on ours, both orders.
     ink = np.asarray(zarr.open(f'{args.labels}/pherc0139-w043_inklabels.zarr/0', mode='r')[10]) > 0
     sup = np.asarray(zarr.open(f'{args.labels}/pherc0139-w043_supervision_mask.zarr/0', mode='r')[10]) > 0
-    runs = [('team', team_zarr, mid-31, mid+31), ('ours', ours, 1, 63)]
+    # ours[k] == team[86-k] (checked above), so reversed ours[1:63] mirrors team[24:86].
+    lo = 86-62
+    runs = [('team', team_zarr, lo, lo+62), ('ours', ours, 1, 63)]
     for name, volume, start, end in runs:
         for flag in ('', '--reverse'):
             out = work/f'w043-{name}{flag.replace("--", "-")}.tif'

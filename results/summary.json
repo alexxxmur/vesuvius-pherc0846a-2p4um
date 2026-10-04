@@ -86,8 +86,9 @@
   "supervised_px_9p6um_grid": 133672,
   "ink_px": 61960,
   "team_render_auc": {
-   "right_order": 0.888,
-   "wrong_order": 0.446
+   "right_order": 0.872,
+   "wrong_order": 0.447,
+   "window": "team slices 24-85 (mirror of ours 1-62)"
   },
   "our_render_auc": {
    "right_order": 0.872,
@@ -98,35 +99,40 @@
   "caveat": "canonical model training data not documented; PHerc0139 may be in it"
  },
  "sheet_profile_qc_2p4um_central_131um": {
+  "measure": "S_local (median per-column sheet salience); chosen after the tilt test, see README",
   "team_labelled": {
    "n": 27,
    "S_local_median": 0.4,
-   "S_local_min": 0.19,
-   "offset_sd_median_um": 69,
-   "offset_sd_p90_um": 80
+   "S_local_min": 0.19
   },
   "team_auto_grown": {
    "n": 31,
    "S_local_median": 0.22,
    "S_local_min": 0.12,
-   "offset_sd_median_um": 77,
-   "offset_sd_p90_um": 85
+   "scrolls": [
+    "PHerc0814",
+    "PHerc0009B"
+   ]
   },
   "ours": {
-   "s12": {
-    "S_local": 0.109,
-    "offset_sd_um": 89
-   },
-   "s6": {
-    "S_local": 0.196,
-    "offset_sd_um": 88
-   },
-   "s0": {
-    "S_local": 0.194,
-    "offset_sd_um": 88
-   }
-  }
+   "s12": 0.112,
+   "s6": 0.196,
+   "s0": 0.203
+  },
+  "files": [
+   "results/qc/labelled-2p4.jsonl",
+   "results/qc/auto-2p4.jsonl",
+   "results/qc/ours-2p4.jsonl"
+  ]
  },
  "tilt_experiment_w043": "results/qc/tilt_experiment_w043.json",
- "bug_fixed_before_release": "per-node normal sign flipped depth order on 50/18/10 % of s12/s6/s0 nodes; all renders and maps redone"
+ "bug_fixed_before_release": "per-node normal sign flipped depth order on 50/18/10 % of s12/s6/s0 nodes; all renders and maps redone",
+ "generations": {
+  "requested": 100,
+  "reached": {
+   "s12": 100,
+   "s0": 83,
+   "s6": 80
+  }
+ }
 }

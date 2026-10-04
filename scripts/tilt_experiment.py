@@ -64,8 +64,8 @@ def main():
         p4 = p.reshape(p.shape[0]//4, 4, p.shape[1]//4, 4).mean((1, 3))
         i = ink[Y0//4:Y0//4+p4.shape[0], X0//4:X0//4+p4.shape[1]]
         s = sup[Y0//4:Y0//4+p4.shape[0], X0//4:X0//4+p4.shape[1]]
-        row = {'tilt_um': tilt, 'S': qc['S'], 'peak_offset_um': qc['peak_offset_um'],
-               'auc': float(roc_auc_score(i[s], p4[s]))}
+        row = {'tilt_um': tilt, 'S': qc['S'], 'S_local_median': qc['S_local_median'],
+               'peak_offset_sd_um': qc['peak_offset_sd_um'], 'auc': float(roc_auc_score(i[s], p4[s]))}
         rows.append(row)
         print(json.dumps(row), flush=True)
     (work/'tilt_experiment.json').write_text(json.dumps(rows, indent=1))
