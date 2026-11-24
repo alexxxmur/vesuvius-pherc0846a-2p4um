@@ -193,7 +193,9 @@ def main():
     # Same layout as the published surface volumes: a group whose level-0 array is "0".
     root = zarr.open_group(args.output, mode='w', zarr_format=2)
     y0, y1, x0, x1 = args.crop if args.crop else (0, h, 0, w)
-    root.create_array('0', shape=(args.depth, y1-y0, x1-x0), chunks=(args.depth, 128, 128), dtype='u1',
+    # Chunks of 128 unless the tile is not a multiple of 128; then one chunk per tile, so no two workers share one.
+    c = 128 if args.tile % 128 == 0 else args.tile
+    root.create_array('0', shape=(args.depth, y1-y0, x1-x0), chunks=(args.depth, c, c), dtype='u1',
                       compressors=None, fill_value=0)
     # Valid mask on the same pixel->grid mapping as the coordinates (pixel p -> grid p*scale, nearest node).
     iy = np.clip(np.rint(np.arange(h)*valid.shape[0]/h).astype(int), 0, valid.shape[0]-1)
