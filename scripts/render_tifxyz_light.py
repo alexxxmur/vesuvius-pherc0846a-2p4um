@@ -195,10 +195,17 @@ def main():
     y0, y1, x0, x1 = args.crop if args.crop else (0, h, 0, w)
     root.create_array('0', shape=(args.depth, y1-y0, x1-x0), chunks=(args.depth, 128, 128), dtype='u1',
                       compressors=None, fill_value=0)
-    # Valid mask on the same pixel->grid mapping as the coordinates (pixel p -> grid p*scale, nearest node).
-    iy = np.clip(np.rint(np.arange(h)*valid.shape[0]/h).astype(int), 0, valid.shape[0]-1)
-    ix = np.clip(np.rint(np.arange(w)*valid.shape[1]/w).astype(int), 0, valid.shape[1]-1)
-    mask_up = valid[np.ix_(iy, ix)]
+    # Valid mask on the same pixel->grid mapping as the coordinates (pixel p -> grid p*scale): a pixel is rendered
+    # only if it lies in (or on the edge of) a grid cell whose four nodes are valid. Cells are padded with invalid
+    # ones, so nothing past the last node is rendered (map_coordinates would copy that node there).
+    cell = np.pad(valid[:-1, :-1] & valid[1:, :-1] & valid[:-1, 1:] & valid[1:, 1:], 1)
+    fy, fx = np.round(np.arange(h)*valid.shape[0]/h, 9), np.round(np.arange(w)*valid.shape[1]/w, 9)
+    rows = [np.clip(f(fy).astype(int)+k, 0, cell.shape[0]-1) for f, k in ((np.floor, 1), (np.ceil, 0))]
+    cols = [np.clip(f(fx).astype(int)+k, 0, cell.shape[1]-1) for f, k in ((np.floor, 1), (np.ceil, 0))]
+    mask_up = np.zeros((h, w), bool)
+    for iy in rows:
+        for ix in cols:
+            mask_up |= cell[np.ix_(iy, ix)]
     mask_up[:y0] = False
     mask_up[y1:] = False
     mask_up[:, :x0] = False
